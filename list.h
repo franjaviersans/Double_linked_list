@@ -8,220 +8,203 @@ using namespace std;
 
 template <class  T> class list;
 
-//clase nodo de lista, con apuntador al siguiente y al anterior
+//list class node, with pointer to the next and prev node
 template <class  T> class Node{
 	friend class list<T>;
 public:
 	T data;
-	Node *sig;
-	Node *ante;
+	Node *next;
+	Node *prev;
 
-	Node(){ sig = ante = NULL; };
+	Node(){ next = prev = NULL; };
 };
 
 
-//clase lista con doble apuntador para poder insertar en O(1) en cualquier posicion
-//y realizada con templates para su mejor uso
+//double linked list class that allows insertions in O(1) at every position
+//and done with templates for a more flexible use
 template <class  T> class list{
 public:
-	typedef Node<T> * Posicion;
+	typedef Node<T> * Position;
 	list();
 	~list();
-	Posicion  First();
-	Posicion  Last();
-	Posicion  End();
-	Posicion  Next(Posicion pos);
-	Posicion  Prev(Posicion pos);
-	void Insert(T valor, Posicion pos);
-	void Erase(Posicion pos);
-	bool getValue(Posicion  pos, T **valor);
+	Position  first();
+	Position  last();
+	Position  end();
+	Position  next(Position pos);
+	Position  prev(Position pos);
+	void insert(T value, Position pos);
+	void erase(Position pos);
+	bool getValue(Position  pos, T **value);
 	int getSize();
 	bool isEmpty();
-	void Clear();
+	void clear();
 
 private:
-	
 
-	Posicion pri, ult;
-	int tamano;
+
+	Position fir, las;
+	int size;
 
 
 
 };
 
 
-//constructor por defecto
-template <class T> list<T>::list(){
-	//inicializa variables de la lista
-	tamano = 0;
-	pri = ult = NULL;
+//default constructor
+template <class T>
+list<T>::list(){
+	//initialize all variables
+	size = 0;
+	fir = las = NULL;
 }
 
 
-// destructor por defecto
-template <class T> list<T>::~list(){
-	Posicion temp = pri;
-
-	//borra todos los elementos de la lista
-	while (temp != NULL){
-		Posicion temp2 = temp;
-		temp = temp->sig;
-		delete temp2;
-	}
-
-	pri = ult = NULL;
+//default destructure
+template <class T>
+list<T>::~list(){
+	clear();
 }
 
 
-//retorna la posicion del primer elemento de la lista
+//return the position of the first element on the list
 template <class  T>
-typename list<T>::Posicion  list<T>::First(){
-	return pri;
+typename list<T>::Position  list<T>::first(){
+	return fir;
 }
 
 
-//retorna la posicion del ultimo elemento de la lista
+//return the position of the las element of the list
 template <class  T>
-typename list<T>::Posicion   list<T>::Last(){
-	return ult;
+typename list<T>::Position   list<T>::last(){
+	return las;
 }
 
 
-//retorna la posicion despues del ultimo elemento de la lista, es decir, null
+//return the position after the las element of the list, which is null
 template <class  T>
-typename list<T>::Posicion   list<T>::End(){
+typename list<T>::Position   list<T>::end(){
 	return NULL;
 }
 
 
-//Avanza la posicion a la siguiente posicion
-//pos tiene que ser diferente de End
+//advance the position to the next position
+//pos must be different to end
 template <class  T>
-typename list<T>::Posicion   list<T>::Next(Posicion pos){
-	return pos->sig;
+typename list<T>::Position   list<T>::next(Position pos){
+	return pos->next;
 }
 
+//advance the position to the previous position
+//pos must be different to end
 template <class  T>
-typename list<T>::Posicion   list<T>::Prev(Posicion pos){
-	return pos->ante;
+typename list<T>::Position   list<T>::prev(Position pos){
+	return pos->prev;
 }
 
-/*
-inserta un elemento en la lista en la posicion pos.
-si pos es igual a End se inserta el elemento en la ultima posicion de la lista
-*/
+//inset an element on the list at the position pos
+//if pos is equal to end, insert the element in the las position of the list
 template <class  T>
-void list<T>::Insert(T valor, Posicion pos){
+void list<T>::insert(T value, Position pos){
 
-	//creo el nuevo nodo con la informacion
-	Posicion t = new Node<T>();
-	t->data = valor;
+	//create a node with information
+	Position t = new Node<T>();
+	t->data = value;
 
-
-
-	//si pri es nulo, la lista esta vacia e inserto el elemento de primero
+	//if fir is null, the list is empty, and the element is inserted in the first position
 	if (isEmpty())
 	{
-		pri = ult = t;
-		t->sig = t->ante = NULL;
+		fir = las = t;
+		t->next = t->prev = NULL;
 	}
-	else if (First() == pos){ //si lo inserto de primero		
-		//Se coloca antes de pos
-		t->sig = pos;
-		pos->ante = t;
-		t->ante = NULL;
-		pri = t;
+	else if (first() == pos){ //if the insertion is in the first position
+		//the new element goes before pos
+		t->next = pos;
+		pos->prev = t;
+		t->prev = NULL;
+		fir = t;
 	}
-	else if (Last() == pos){
-		//no pasa nada, el ultimo sigue siendo el ultimo
-		//Se coloca antes de pos
-		t->sig = pos;
-		t->ante = pos->ante;
-		t->ante->sig = t;
-		pos->ante = t;
+	else if (last() == pos){
+		//nothing happends, the last element remains the las element
+		//the new element goes before pos
+		t->next = pos;
+		t->prev = pos->prev;
+		t->prev->next = t;
+		pos->prev = t;
 	}
-	else if (pos == End()){
-		ult->sig = t;
-		t->ante = ult;
-		t->sig = NULL;
-		ult = t;
+	else if (pos == end()){
+		las->next = t;
+		t->prev = las;
+		t->next = NULL;
+		las = t;
 	}
 
-	tamano++;
+	size++;
 }
 
-/*
-borra el nodo de la lista encontrado en la posicion pos
-el valor pos debe ser diferente de End
-posicion queda con un valor invalido
-*/
+
+//erase the node of the list at the position pos
+//the value pos must be different to end
+//the actual position is updated to an invalid value
 template <class  T>
-void list<T>::Erase(Posicion pos){
-	if (isEmpty()) return; //no hay valor que borrar
-	if (pos == End()) return; //posicion no es valida
+void list<T>::erase(Position pos){
+	if (isEmpty()) return; //there is nothing to erase
+	if (pos == end()) return; //pos is an invalid position
 
-
-	//pongo al anterior, si existe, apuntado al nuevo siguiente 
-	if (pos->ante != NULL){
-		pos->ante->sig = pos->sig;
+	if (pos->prev != NULL){
+		pos->prev->next = pos->next;
 	}
 
-	//pongo al siguiente, si existe, apuntado al anterior
-	if (pos->sig != NULL){
-		pos->sig->ante = pos->ante;
+	if (pos->next != NULL){
+		pos->next->prev = pos->prev;
 	}
 
-	if (pos == Last()) ult = pos->ante; //muevo el ult de ser necesario
-	if (pos == First()) pri = pos->sig; //muevo el primero de ser necesario
+	if (pos == last()) las = pos->prev;
+	if (pos == first()) fir = pos->next;
 
-	delete pos; //libero la memoria
-	tamano--;
+	delete pos; //erase memory
+	size--;
 }
 
 
 
-/*
-retorna el valor de una posicion de la lista
-el valor pos debe ser diferente de End
-*/
+//returns the value at the position pos
+//the value pos must be different to end
 template <class  T>
-bool list<T>::getValue(Posicion pos, T **valor){
-	if (pos == End()) return false;
+bool list<T>::getValue(Position pos, T **value){
+	if (pos == end()) return false;
 
-	*(valor) = &(pos->data);
+	*(value) = &(pos->data);
 
 	return true;
 }
 
-
-//retorna el tamano de la lista
+//return the size of the list
 template <class  T>
 int list<T>::getSize(){
-	return tamano;
+	return size;
 }
 
-
-//retorna si la lista esta vacia o no
+//return true if the list is empty
 template <class  T>
 bool list<T>::isEmpty(){
-	return First() == NULL;
+	return first() == NULL;
 }
 
-//metodo para vaciar la lista
+//method to clear the list
 template <class  T>
-void list<T>::Clear(){
-	Posicion temp = pri;
+void list<T>::clear(){
+	Position temp = fir;
 
-	//borra todos los elementos de la lista
+	//erase all the elements in the list
 	while (temp != NULL){
-		Posicion temp2 = temp;
-		temp = temp->sig;
+		Position temp2 = temp;
+		temp = temp->next;
 		delete temp2;
 	}
 
-	pri = ult = NULL;
+	fir = las = NULL;
 
-	tamano = 0;
+	size = 0;
 }
 
 #endif
